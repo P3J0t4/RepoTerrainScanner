@@ -176,76 +176,95 @@ namespace RepoTerrainScanner
             List<ScanTarget> pendingTargets = new List<ScanTarget>();
             HashSet<int> processedPGOs = new HashSet<int>();
 
-            // ====================================================================
-            // FASE 1: RECOLECCIÓN EN ÁREA RADIAL (CERO LAG)
-            // ====================================================================
-            Collider[] colliders = Physics.OverlapSphere(origin, maxDistance);
-            int processCount = 0;
+            // --- VERIFICACIÓN DE RED ---
+            // Determinamos si el escaneo lo activó este jugador o un compañero online
+            int myPlayerId = PhotonNetwork.InRoom ? PhotonNetwork.LocalPlayer.ActorNumber : 0;
+            bool isLocalScan = (playerId == myPlayerId);
 
-            for (int i = 0; i < colliders.Length; i++)
+            // Solo procesamos las físicas y los hologramas si YO activé la onda
+            if (isLocalScan)
             {
-                Collider col = colliders[i];
-                if (col == null || !col.gameObject.activeInHierarchy) continue;
+                // ====================================================================
+                // FASE 1: RECOLECCIÓN EN ÁREA RADIAL (CERO LAG)
+                // ====================================================================
+                Collider[] colliders = Physics.OverlapSphere(origin, maxDistance);
+                int processCount = 0;
 
-                PhysGrabObject pgo = col.GetComponentInParent<PhysGrabObject>();
-                if (pgo == null) continue;
+                for (int i = 0; i < colliders.Length; i++)
+                {
+                    Collider col = colliders[i];
+                    if (col == null || !col.gameObject.activeInHierarchy) continue;
 
-                if (!processedPGOs.Add(pgo.gameObject.GetInstanceID())) continue;
+                    PhysGrabObject pgo = col.GetComponentInParent<PhysGrabObject>();
+                    if (pgo == null) continue;
 
-                float dist = Vector3.Distance(origin, pgo.transform.position);
-                Color targetColor = Color.clear;
+                    // Filtro QoL: Ignorar ítems que ya están en el carrito
+                    var impactDetector = pgo.GetComponentInChildren<PhysGrabObjectImpactDetector>();
+                    if (impactDetector == null) 
+                        impactDetector = pgo.GetComponentInParent<PhysGrabObjectImpactDetector>();
 
-                if (pgo.GetComponentInParent<EnemyRigidbody>() != null) 
-                {
-                    targetColor = Color.red;
-                } 
-                else if (pgo.GetComponentInParent<PlayerAvatar>() != null || pgo.GetComponentInParent<PlayerController>() != null) 
-                {
-                    if (pgo.transform.root != this.transform.root) 
-                        targetColor = Color.green;
-                } 
-                else if (pgo.GetComponentInParent<ValuableObject>() != null) 
-                {
-                    targetColor = Color.yellow;
-                } 
-                else if (pgo.GetComponentInParent<ValuableDiscoverCustom>() != null) 
-                {
-                    targetColor = Color.blue;
-                } 
-                else if (pgo.GetComponentInParent<ItemAttributes>() != null) 
-                {
-                    targetColor = new Color(0.7f, 0.2f, 1.0f);
-                } 
-                if (targetColor != Color.clear)
-                {
-                    pendingTargets.Add(new ScanTarget { physGrab = pgo, distance = dist, color = targetColor, position = pgo.transform.position });
+                    if (impactDetector != null && impactDetector.inCart)
+                    {
+                        continue; 
+                    }
+
+                    if (!processedPGOs.Add(pgo.gameObject.GetInstanceID())) continue;
+
+                    float dist = Vector3.Distance(origin, pgo.transform.position);
+                    Color targetColor = Color.clear;
+
+                    if (pgo.GetComponentInParent<EnemyRigidbody>() != null) 
+                    {
+                        targetColor = Color.red;
+                    } 
+                    else if (pgo.GetComponentInParent<PlayerAvatar>() != null || pgo.GetComponentInParent<PlayerController>() != null) 
+                    {
+                        if (pgo.transform.root != this.transform.root) 
+                            targetColor = Color.green;
+                    } 
+                    else if (pgo.GetComponentInParent<ValuableObject>() != null) 
+                    {
+                        targetColor = Color.yellow;
+                    } 
+                    else if (pgo.GetComponentInParent<ValuableDiscoverCustom>() != null) 
+                    {
+                        targetColor = Color.blue;
+                    } 
+                    else if (pgo.GetComponentInParent<ItemAttributes>() != null) 
+                    {
+                        targetColor = new Color(0.7f, 0.2f, 1.0f);
+                    } 
+                    
+                    if (targetColor != Color.clear)
+                    {
+                        pendingTargets.Add(new ScanTarget { physGrab = pgo, distance = dist, color = targetColor, position = pgo.transform.position });
+                    }
+
+                    processCount++;
+                    if (processCount > 40)
+                    {
+                        processCount = 0;
+                        yield return null; 
+                    }
                 }
 
-                processCount++;
-                if (processCount > 40)
+                // ====================================================================
+                // FASE 1.5: JUGADORES VIVOS (Esferas Primitivas Verdes)
+                // ====================================================================
+                foreach (var avatar in FindObjectsOfType<PlayerAvatar>())
                 {
-                    processCount = 0;
-                    yield return null; 
+                    if (avatar == null || !avatar.gameObject.activeInHierarchy) continue;
+
+                    if (avatar.transform.root == this.transform.root) 
+                        continue;
+
+                    float dist = Vector3.Distance(origin, avatar.transform.position);
+                    if (dist <= maxDistance)
+                    {
+                        pendingTargets.Add(new ScanTarget { physGrab = null, distance = dist, color = Color.green, position = avatar.transform.position });
+                    }
                 }
-            }
-
-            // ====================================================================
-            // FASE 1.5: JUGADORES VIVOS (Esferas Primitivas Verdes)
-            // ====================================================================
-            foreach (var avatar in FindObjectsOfType<PlayerAvatar>())
-            {
-                if (avatar == null || !avatar.gameObject.activeInHierarchy) continue;
-
-                if (avatar.transform.root == this.transform.root) 
-                    continue;
-
-                float dist = Vector3.Distance(origin, avatar.transform.position);
-                if (dist <= maxDistance)
-                {
-                    pendingTargets.Add(new ScanTarget { physGrab = null, distance = dist, color = Color.green, position = avatar.transform.position });
-                }
-            }
-
+            } // <-- FIN DEL IF (isLocalScan)
             // ====================================================================
             // FASE 2: ANIMACIÓN DE ONDA VISUAL (Cero basura gráfica)
             // ====================================================================

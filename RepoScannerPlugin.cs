@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 
 namespace RepoTerrainScanner
 {
-    [BepInPlugin("com.mod.repoterrainscanner", "Repo Terrain Scanner", "3.0.3")]
+    [BepInPlugin("com.mod.repoterrainscanner", "Repo Terrain Scanner", "3.0.4")]
     public class RepoScannerPlugin : BaseUnityPlugin
     {
         public static RepoScannerPlugin Instance { get; private set; }
