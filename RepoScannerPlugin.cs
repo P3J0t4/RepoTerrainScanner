@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 
 namespace RepoTerrainScanner
 {
-    [BepInPlugin("com.mod.repoterrainscanner", "Repo Terrain Scanner", "3.1.0")]
+    [BepInPlugin("com.mod.repoterrainscanner", "Repo Terrain Scanner", "3.1.1")]
     public class RepoScannerPlugin : BaseUnityPlugin
     {
         public static RepoScannerPlugin Instance { get; private set; }
@@ -21,7 +21,7 @@ namespace RepoTerrainScanner
         {
             Instance = this;
             ModLogger = Logger;
-            ModLogger.LogInfo("=== [RepoTerrainScanner] Iniciando (Sistema Modular v3.1.0) ===");
+            ModLogger.LogInfo("=== [RepoTerrainScanner] Iniciando (Sistema Modular v3.1.1) ===");
 
             ConfigInstance = new RepoConfig(Config);
             LoadBundles();

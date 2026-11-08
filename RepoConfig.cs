@@ -72,7 +72,7 @@ namespace RepoTerrainScanner
             EnableScanSound = cfg.Bind("General", "EnableScanSound", true, 
                 "[EN] Play sonar sound effect when scanning. / [ES] Reproduce el efecto de sonido sonar al escanear.");
 
-            EnableRemotePlayerSound = cfg.Bind("General", "EnableRemotePlayerSound", false, 
+            EnableRemotePlayerSound = cfg.Bind("General", "EnableRemotePlayerSound", true, 
                 "[EN] Hear the sonar sound when other players scan in multiplayer. / [ES] Escuchar el sonido del sonar cuando otros jugadores escanean en multijugador.");
 
             // ==========================================

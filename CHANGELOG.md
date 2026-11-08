@@ -10,12 +10,12 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ## English
 
-### [3.1.0] - 2026-11-08
+### [3.1.1] - 2026-11-08
 
 #### Added
 * **Tactical Sonar Audio:** Integrated custom sonar sound effect (`scansound.bundle` / `darkSonar.wav`). Plays crisp, centered 2D audio for the local player and 3D positional audio across the facility for remote teammates in multiplayer. Includes volume and toggle controls in the configuration.
 * **Configurable Cooldown:** Added `ScanCooldown` (Default: `6.0` seconds) to prevent spamming the scanner and audio. Can be adjusted freely to match user preference.
-* **Multiplayer Sonar Audio Filter:** Added `EnableRemotePlayerSound` (Default: `false`) allowing players to decide whether they want to hear teammates' sonar pings in 3D or only their own scan audio.
+* **Multiplayer Sonar Audio Filter:** Added `EnableRemotePlayerSound` (Default: `true`) allowing players to hear teammates' sonar pings in 3D across the map, with the option to disable it if preferred.
 * **Extraction Point Scanning:** The scanner now detects extraction terminals (`ExtractionPoint`) generated across the facility and projects tactical holographic frames around them.
   * Active/Ready extraction points are displayed in **Electric Cyan** (`#00F6FF`).
   * Inactive/Completed extraction points (`isCompletedRightAway`) are displayed in **Dim Gray** (`#808080`).
@@ -94,12 +94,12 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ## Español
 
-### [3.1.0] - 2026-11-08
+### [3.1.1] - 2026-11-08
 
 #### Añadido
 * **Efecto de Sonido Sonar Táctico:** Se integró un sonido de sonar personalizado (`scansound.bundle` / `darkSonar.wav`). Se reproduce en audio 2D directo y claro para el jugador local y en audio 3D posicional para los compañeros en multijugador. Incluye control de volumen e interruptor en la configuración.
 * **Tiempo de Enfriamiento (Cooldown) Configurable:** Se agregó la opción `ScanCooldown` (Por defecto: `6.0` segundos) para evitar el spam del escaneo y la repetición molesta del audio. Se puede ajustar libremente a cualquier valor.
-* **Filtro de Sonar en Multijugador:** Se agregó la opción `EnableRemotePlayerSound` (Por defecto: `false`) que permite elegir si deseas escuchar el sonar de los demás jugadores en 3D o solo el tuyo propio.
+* **Filtro de Sonar en Multijugador:** Se agregó la opción `EnableRemotePlayerSound` (Por defecto: `true`) que permite escuchar el sonar de los demás compañeros en 3D por el mapa, con la opción de desactivarlo si alguien no desea escucharlo.
 * **Escaneo de Puntos de Extracción:** El escáner ahora detecta las terminales de extracción (`ExtractionPoint`) generadas por el mapa y proyecta recuadros holográficos tácticos a su alrededor.
   * Los puntos activos/disponibles se muestran en **Cyan Eléctrico** (`#00F6FF`).
   * Los puntos inactivos/completados (`isCompletedRightAway`) se muestran en **Gris Apagado** (`#808080`).

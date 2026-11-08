@@ -1,6 +1,6 @@
 {
   "name": "RepoTerrainScanner",
-  "version_number": "3.1.0",
+  "version_number": "3.1.1",
   "website_url": "https://github.com/P3J0t4/RepoTerrainScanner.git",
   "description": "Tactical terrain and entity scanner using native holograms. Open source under MPL-2.0.",
   "dependencies": [

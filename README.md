@@ -54,7 +54,7 @@ Puedes modificar los parámetros directamente o mediante un gestor de configurac
 | `EnableExtractionScan` | `true` | Escanea y resalta puntos de extracción en el mapa (Cyan). |
 | `ShowInactiveExtractions` | `true` | Muestra puntos de extracción inactivos o ya completados (Gris). Si es `false`, solo se muestran los activos. |
 | `EnableScanSound` | `true` | Activa o desactiva la reproducción del efecto de sonido sonar al escanear. |
-| `EnableRemotePlayerSound` | `false` | Permite escuchar el sonido del sonar cuando otros jugadores escanean en multijugador (por defecto desactivado para evitar molestias). |
+| `EnableRemotePlayerSound` | `true` | Permite escuchar el sonido del sonar cuando otros jugadores escanean en multijugador. Si no deseas escucharlo, puedes desactivarlo. |
 | `ScanSoundVolume` | `0.8` | Volumen del efecto de sonido del escáner (de 0.0 a 1.0). |
 | `EnableSelfScan` | `true` | *(Experimental / Prueba)* Permite que el escáner te detecte a ti mismo para probar con mods de 3ra persona (se removerá en futuras versiones). |
 | `ScanColorEnemy` | `#FF0000` | Color del recuadro holográfico para enemigos. |
