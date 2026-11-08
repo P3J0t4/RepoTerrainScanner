@@ -268,15 +268,26 @@ namespace RepoTerrainScanner
                 // ====================================================================
                 // FASE 1.5: JUGADORES (Cuadro Holográfico Verde de Alta Tecnología)
                 // ====================================================================
+                try
+                {
+                    RepoScannerPlugin.Instance?.Config?.Reload();
+                }
+                catch { }
+
+                bool allowSelfScan = RepoScannerPlugin.ConfigInstance != null && 
+                                     RepoScannerPlugin.ConfigInstance.EnableSelfScan != null && 
+                                     RepoScannerPlugin.ConfigInstance.EnableSelfScan.Value;
+
                 foreach (var avatar in FindObjectsOfType<PlayerAvatar>())
                 {
                     if (avatar == null || !avatar.gameObject.activeInHierarchy) continue;
 
-                    bool isSelf = (avatar.transform.root == this.transform.root);
-                    bool allowSelfScan = RepoScannerPlugin.ConfigInstance == null || RepoScannerPlugin.ConfigInstance.EnableSelfScan.Value;
+                    bool isSelf = IsSelfAvatar(avatar);
 
                     if (isSelf && !allowSelfScan)
+                    {
                         continue;
+                    }
 
                     float dist = Vector3.Distance(origin, avatar.transform.position);
                     if (dist <= maxDistance)
@@ -365,6 +376,50 @@ namespace RepoTerrainScanner
             
             _activeWaves.Remove(playerId);
             Destroy(mat); 
+        }
+
+        private bool IsSelfAvatar(PlayerAvatar avatar)
+        {
+            if (avatar == null) return false;
+
+            // 1. Método nativo del juego para obtener el avatar local
+            try
+            {
+                PlayerAvatar localAvatar = SemiFunc.PlayerAvatarLocal();
+                if (localAvatar != null && localAvatar == avatar) return true;
+            }
+            catch { }
+
+            // 2. Instancia singleton del avatar del jugador
+            try
+            {
+                if (PlayerAvatar.instance != null && PlayerAvatar.instance == avatar) return true;
+            }
+            catch { }
+
+            // 3. Controlador local del jugador
+            try
+            {
+                if (PlayerController.instance != null && PlayerController.instance.playerAvatarScript == avatar) return true;
+            }
+            catch { }
+
+            // 4. PhotonView perteneciente al cliente local
+            try
+            {
+                if (avatar.photonView != null && avatar.photonView.IsMine) return true;
+            }
+            catch { }
+
+            // 5. Verificación de jerarquía y cámara
+            try
+            {
+                if (Camera.main != null && Camera.main.transform.IsChildOf(avatar.transform)) return true;
+                if (avatar.transform.root == this.transform.root) return true;
+            }
+            catch { }
+
+            return false;
         }
 
         private void TriggerPlayerUIBox(PlayerAvatar avatar, Color markerColor, float waveDuration)
