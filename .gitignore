@@ -8,6 +8,7 @@
 package/
 backup_stable/
 dotnet build -c Release.txt
+*.zip
 
 # DLL compilada de distribución
 REPO Terrain Scanner/RepoTerrainScanner.dll

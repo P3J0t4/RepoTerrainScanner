@@ -177,6 +177,7 @@ namespace RepoTerrainScanner
             public Color color;
             public Vector3 position;
             public PlayerAvatar playerAvatar;
+            public ExtractionPoint extractionPoint;
         }
 
         private IEnumerator AnimateWaveAndDiscover(int playerId, ActiveWave wave, Vector3 origin, ScanSettingsData cfg)
@@ -194,6 +195,12 @@ namespace RepoTerrainScanner
             // Solo procesamos las físicas y los hologramas si YO activé la onda
             if (isLocalScan)
             {
+                try
+                {
+                    RepoScannerPlugin.Instance?.Config?.Reload();
+                }
+                catch { }
+
                 // ====================================================================
                 // FASE 1: RECOLECCIÓN EN ÁREA RADIAL (CERO LAG)
                 // ====================================================================
@@ -207,6 +214,12 @@ namespace RepoTerrainScanner
 
                     // Los jugadores se detectan y gestionan en Fase 1.5 con seguimiento dinámico
                     if (col.GetComponentInParent<PlayerAvatar>() != null || col.GetComponentInParent<PlayerController>() != null)
+                    {
+                        continue;
+                    }
+
+                    // Los puntos de extracción se detectan y gestionan en Fase 1.6
+                    if (col.GetComponentInParent<ExtractionPoint>() != null)
                     {
                         continue;
                     }
@@ -231,19 +244,51 @@ namespace RepoTerrainScanner
 
                     if (pgo.GetComponentInParent<EnemyRigidbody>() != null) 
                     {
-                        targetColor = Color.red;
+                        bool enabled = RepoScannerPlugin.ConfigInstance == null || 
+                                       RepoScannerPlugin.ConfigInstance.EnableEnemyScan == null || 
+                                       RepoScannerPlugin.ConfigInstance.EnableEnemyScan.Value;
+                        if (enabled)
+                        {
+                            targetColor = RepoScannerPlugin.ConfigInstance != null && RepoScannerPlugin.ConfigInstance.ScanColorEnemy != null
+                                ? RepoScannerPlugin.ConfigInstance.ScanColorEnemy.Value
+                                : Color.red;
+                        }
                     } 
                     else if (pgo.GetComponentInParent<ValuableObject>() != null) 
                     {
-                        targetColor = Color.yellow;
+                        bool enabled = RepoScannerPlugin.ConfigInstance == null || 
+                                       RepoScannerPlugin.ConfigInstance.EnableValuableScan == null || 
+                                       RepoScannerPlugin.ConfigInstance.EnableValuableScan.Value;
+                        if (enabled)
+                        {
+                            targetColor = RepoScannerPlugin.ConfigInstance != null && RepoScannerPlugin.ConfigInstance.ScanColorValuable != null
+                                ? RepoScannerPlugin.ConfigInstance.ScanColorValuable.Value
+                                : Color.yellow;
+                        }
                     } 
                     else if (pgo.GetComponentInParent<ValuableDiscoverCustom>() != null) 
                     {
-                        targetColor = Color.blue;
+                        bool enabled = RepoScannerPlugin.ConfigInstance == null || 
+                                       RepoScannerPlugin.ConfigInstance.EnableCosmeticScan == null || 
+                                       RepoScannerPlugin.ConfigInstance.EnableCosmeticScan.Value;
+                        if (enabled)
+                        {
+                            targetColor = RepoScannerPlugin.ConfigInstance != null && RepoScannerPlugin.ConfigInstance.ScanColorCosmetic != null
+                                ? RepoScannerPlugin.ConfigInstance.ScanColorCosmetic.Value
+                                : Color.blue;
+                        }
                     } 
                     else if (pgo.GetComponentInParent<ItemAttributes>() != null) 
                     {
-                        targetColor = new Color(0.7f, 0.2f, 1.0f);
+                        bool enabled = RepoScannerPlugin.ConfigInstance == null || 
+                                       RepoScannerPlugin.ConfigInstance.EnableItemScan == null || 
+                                       RepoScannerPlugin.ConfigInstance.EnableItemScan.Value;
+                        if (enabled)
+                        {
+                            targetColor = RepoScannerPlugin.ConfigInstance != null && RepoScannerPlugin.ConfigInstance.ScanColorItem != null
+                                ? RepoScannerPlugin.ConfigInstance.ScanColorItem.Value
+                                : new Color(0.7f, 0.2f, 1.0f);
+                        }
                     } 
                     
                     if (targetColor != Color.clear)
@@ -253,7 +298,8 @@ namespace RepoTerrainScanner
                             distance = dist, 
                             color = targetColor, 
                             position = pgo.transform.position,
-                            playerAvatar = null
+                            playerAvatar = null,
+                            extractionPoint = null
                         });
                     }
 
@@ -268,37 +314,90 @@ namespace RepoTerrainScanner
                 // ====================================================================
                 // FASE 1.5: JUGADORES (Cuadro Holográfico Verde de Alta Tecnología)
                 // ====================================================================
-                try
+                bool allowPlayerScan = RepoScannerPlugin.ConfigInstance == null || 
+                                       RepoScannerPlugin.ConfigInstance.EnablePlayerScan == null || 
+                                       RepoScannerPlugin.ConfigInstance.EnablePlayerScan.Value;
+
+                if (allowPlayerScan)
                 {
-                    RepoScannerPlugin.Instance?.Config?.Reload();
-                }
-                catch { }
+                    bool allowSelfScan = RepoScannerPlugin.ConfigInstance != null && 
+                                         RepoScannerPlugin.ConfigInstance.EnableSelfScan != null && 
+                                         RepoScannerPlugin.ConfigInstance.EnableSelfScan.Value;
 
-                bool allowSelfScan = RepoScannerPlugin.ConfigInstance != null && 
-                                     RepoScannerPlugin.ConfigInstance.EnableSelfScan != null && 
-                                     RepoScannerPlugin.ConfigInstance.EnableSelfScan.Value;
+                    Color playerColor = RepoScannerPlugin.ConfigInstance != null && RepoScannerPlugin.ConfigInstance.ScanColorPlayer != null
+                        ? RepoScannerPlugin.ConfigInstance.ScanColorPlayer.Value
+                        : Color.green;
 
-                foreach (var avatar in FindObjectsOfType<PlayerAvatar>())
-                {
-                    if (avatar == null || !avatar.gameObject.activeInHierarchy) continue;
-
-                    bool isSelf = IsSelfAvatar(avatar);
-
-                    if (isSelf && !allowSelfScan)
+                    foreach (var avatar in FindObjectsOfType<PlayerAvatar>())
                     {
-                        continue;
+                        if (avatar == null || !avatar.gameObject.activeInHierarchy) continue;
+
+                        bool isSelf = IsSelfAvatar(avatar);
+
+                        if (isSelf && !allowSelfScan)
+                        {
+                            continue;
+                        }
+
+                        float dist = Vector3.Distance(origin, avatar.transform.position);
+                        if (dist <= maxDistance)
+                        {
+                            pendingTargets.Add(new ScanTarget { 
+                                physGrab = null, 
+                                distance = dist, 
+                                color = playerColor, 
+                                position = avatar.transform.position,
+                                playerAvatar = avatar,
+                                extractionPoint = null
+                            });
+                        }
                     }
+                }
 
-                    float dist = Vector3.Distance(origin, avatar.transform.position);
-                    if (dist <= maxDistance)
+                // ====================================================================
+                // FASE 1.6: PUNTOS DE EXTRACCIÓN (Activos en Cyan, Inactivos en Gris)
+                // ====================================================================
+                bool allowExtractionScan = RepoScannerPlugin.ConfigInstance == null || 
+                                           RepoScannerPlugin.ConfigInstance.EnableExtractionScan == null || 
+                                           RepoScannerPlugin.ConfigInstance.EnableExtractionScan.Value;
+
+                if (allowExtractionScan)
+                {
+                    bool showInactive = RepoScannerPlugin.ConfigInstance == null ||
+                                        RepoScannerPlugin.ConfigInstance.ShowInactiveExtractions == null ||
+                                        RepoScannerPlugin.ConfigInstance.ShowInactiveExtractions.Value;
+
+                    Color activeColor = (RepoScannerPlugin.ConfigInstance != null && RepoScannerPlugin.ConfigInstance.ScanColorExtraction != null)
+                        ? RepoScannerPlugin.ConfigInstance.ScanColorExtraction.Value
+                        : new Color(0f, 0.96f, 1f, 1f);
+
+                    Color inactiveColor = (RepoScannerPlugin.ConfigInstance != null && RepoScannerPlugin.ConfigInstance.ScanColorExtractionInactive != null)
+                        ? RepoScannerPlugin.ConfigInstance.ScanColorExtractionInactive.Value
+                        : new Color(0.5f, 0.5f, 0.5f, 0.8f);
+
+                    foreach (var ep in FindObjectsOfType<ExtractionPoint>())
                     {
-                        pendingTargets.Add(new ScanTarget { 
-                            physGrab = null, 
-                            distance = dist, 
-                            color = Color.green, 
-                            position = avatar.transform.position,
-                            playerAvatar = avatar
-                        });
+                        if (ep == null || !ep.gameObject.activeInHierarchy) continue;
+
+                        bool isInactive = IsExtractionPointInactive(ep);
+
+                        if (isInactive && !showInactive)
+                            continue;
+
+                        float dist = Vector3.Distance(origin, ep.transform.position);
+                        if (dist <= maxDistance)
+                        {
+                            Color epColor = isInactive ? inactiveColor : activeColor;
+
+                            pendingTargets.Add(new ScanTarget { 
+                                physGrab = null, 
+                                distance = dist, 
+                                color = epColor, 
+                                position = ep.transform.position,
+                                playerAvatar = null,
+                                extractionPoint = ep
+                            });
+                        }
                     }
                 }
             } // <-- FIN DEL IF (isLocalScan)
@@ -350,6 +449,10 @@ namespace RepoTerrainScanner
                         {
                             TriggerPlayerUIBox(target.playerAvatar, target.color, cfg.ScanDuration);
                         }
+                        else if (target.extractionPoint != null)
+                        {
+                            TriggerExtractionUIBox(target.extractionPoint, target.color, cfg.ScanDuration);
+                        }
                         else if (target.physGrab != null)
                         {
                             TriggerNativeUIBox(target.color, target.physGrab, cfg.ScanDuration);
@@ -376,6 +479,26 @@ namespace RepoTerrainScanner
             
             _activeWaves.Remove(playerId);
             Destroy(mat); 
+        }
+
+        private static readonly System.Reflection.FieldInfo _isCompletedRightAwayField = 
+            typeof(ExtractionPoint).GetField("isCompletedRightAway", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        private static bool IsExtractionPointInactive(ExtractionPoint ep)
+        {
+            if (ep == null) return false;
+            try
+            {
+                if (_isCompletedRightAwayField != null)
+                {
+                    return (bool)_isCompletedRightAwayField.GetValue(ep);
+                }
+                return Traverse.Create(ep).Field<bool>("isCompletedRightAway").Value;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private bool IsSelfAvatar(PlayerAvatar avatar)
@@ -511,6 +634,93 @@ namespace RepoTerrainScanner
 
             // Respaldo de seguridad si ValuableDiscover no estuviera listo
             SpawnMarker(avatar.transform.position, markerColor);
+        }
+
+        private void TriggerExtractionUIBox(ExtractionPoint ep, Color markerColor, float waveDuration)
+        {
+            if (ep == null || !ep.gameObject.activeInHierarchy) return;
+
+            if (ValuableDiscover.instance != null)
+            {
+                try
+                {
+                    Transform proxyTransform = ep.transform.Find("ScannerExtractionProxy");
+                    PhysGrabObject pgo = null;
+                    ValuableDiscoverCustom custom = null;
+
+                    if (proxyTransform == null)
+                    {
+                        GameObject proxyObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        proxyObj.name = "ScannerExtractionProxy";
+
+                        // Eliminar collider inmediatamente para evitar cualquier colisión o interferencia física
+                        Collider col = proxyObj.GetComponent<Collider>();
+                        if (col != null) Destroy(col);
+
+                        // Anclar centrado a la altura media de la estación de extracción
+                        proxyObj.transform.SetParent(ep.transform, false);
+                        proxyObj.transform.localPosition = new Vector3(0f, 1.5f, 0f);
+                        proxyObj.transform.localScale = new Vector3(2.6f, 3.0f, 2.6f);
+
+                        // Renderizador completamente transparente para que el HUD calcule los límites 3D
+                        Renderer rend = proxyObj.GetComponent<Renderer>();
+                        Material invMat = new Material(Shader.Find("GUI/Text Shader"));
+                        invMat.color = Color.clear;
+                        rend.material = invMat;
+                        rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                        rend.receiveShadows = false;
+
+                        try
+                        {
+                            ScanControllerPatches.shouldSuppressPhysGrabObjectAwake = true;
+                            pgo = proxyObj.AddComponent<PhysGrabObject>();
+                            pgo.enabled = false;
+                            pgo.centerPoint = proxyObj.transform.position;
+                        }
+                        finally
+                        {
+                            ScanControllerPatches.shouldSuppressPhysGrabObjectAwake = false;
+                        }
+
+                        GameObject discoverGo = new GameObject("ScannerExtractionCustomDiscover");
+                        discoverGo.transform.SetParent(proxyObj.transform, false);
+                        discoverGo.transform.localPosition = Vector3.zero;
+
+                        try
+                        {
+                            ScanControllerPatches.shouldSuppressValuableDiscoverCustomAwake = true;
+                            custom = discoverGo.AddComponent<ValuableDiscoverCustom>();
+                        }
+                        finally
+                        {
+                            ScanControllerPatches.shouldSuppressValuableDiscoverCustomAwake = false;
+                        }
+                    }
+                    else
+                    {
+                        pgo = proxyTransform.GetComponent<PhysGrabObject>();
+                        custom = proxyTransform.GetComponentInChildren<ValuableDiscoverCustom>();
+                        if (pgo != null)
+                        {
+                            pgo.centerPoint = proxyTransform.position;
+                        }
+                    }
+
+                    if (pgo != null && custom != null)
+                    {
+                        custom.colorCorner = markerColor;
+                        custom.colorMiddle = new Color(markerColor.r * 0.4f, markerColor.g * 0.4f, markerColor.b * 0.4f, 0.3f);
+                        custom.waitTime = Mathf.Max(4.0f, waveDuration);
+
+                        ValuableDiscover.instance.New(pgo, ValuableDiscoverGraphic.State.Custom, custom);
+                        return;
+                    }
+                }
+                catch { }
+            }
+
+            // Respaldo de seguridad si ValuableDiscover no estuviera listo
+            SpawnMarker(ep.transform.position + Vector3.up * 1.5f, markerColor);
         }
 
         private void TriggerNativeUIBox(Color markerColor, PhysGrabObject physGrab, float waveDuration)

@@ -45,7 +45,21 @@ Puedes modificar los parámetros directamente o mediante un gestor de configurac
 | Parámetro | Valor por defecto | Descripción |
 | :--- | :--- | :--- |
 | `ActiveKey` | `C` | Tecla asignada para detonar la onda de escaneo. |
+| `EnableEnemyScan` | `true` | Escanea y resalta enemigos (Rojo). |
+| `EnableValuableScan` | `true` | Escanea y resalta chatarra y objetos de valor (Amarillo). |
+| `EnableCosmeticScan` | `true` | Escanea y resalta objetos cosméticos (Azul). |
+| `EnableItemScan` | `true` | Escanea y resalta herramientas, armas e ítems (Morado). |
+| `EnablePlayerScan` | `true` | Escanea y resalta compañeros de equipo y jugadores (Verde). |
+| `EnableExtractionScan` | `true` | Escanea y resalta puntos de extracción en el mapa (Cyan). |
+| `ShowInactiveExtractions` | `true` | Muestra puntos de extracción inactivos o ya completados (Gris). Si es `false`, solo se muestran los activos. |
 | `EnableSelfScan` | `true` | *(Experimental / Prueba)* Permite que el escáner te detecte a ti mismo para probar con mods de 3ra persona (se removerá en futuras versiones). |
+| `ScanColorEnemy` | `#FF0000` | Color del recuadro holográfico para enemigos. |
+| `ScanColorValuable` | `#FFFF00` | Color del recuadro holográfico para chatarra y valiosos. |
+| `ScanColorCosmetic` | `#0000FF` | Color del recuadro holográfico para cosméticos. |
+| `ScanColorItem` | `#B233FF` | Color del recuadro holográfico para herramientas, armas e ítems. |
+| `ScanColorPlayer` | `#00FF00` | Color del recuadro holográfico para jugadores y aliados. |
+| `ScanColorExtraction` | `#00F6FF` | Color del recuadro holográfico para puntos de extracción activos. |
+| `ScanColorExtractionInactive` | `#808080` | Color del recuadro holográfico para puntos de extracción inactivos/completados. |
 | `ScanColorHead` | `#FFD469` | Color del borde frontal de la onda expansiva. |
 | `ScanColor` | `#61BADE` | Color del cuerpo/cola de la onda expansiva. |
 | `ScanLineWidth` | `1.0` | Grosor visual de la línea del escáner. |

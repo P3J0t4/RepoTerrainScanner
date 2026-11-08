@@ -10,6 +10,22 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ## English
 
+### [3.1.0] - 2026-11-08
+
+#### Added
+* **Extraction Point Scanning:** The scanner now detects extraction terminals (`ExtractionPoint`) generated across the facility and projects tactical holographic frames around them.
+  * Active/Ready extraction points are displayed in **Electric Cyan** (`#00F6FF`).
+  * Inactive/Completed extraction points (`isCompletedRightAway`) are displayed in **Dim Gray** (`#808080`).
+* **Independent Category Toggles:** Added individual toggles in the config file to enable or disable scanning for each specific entity type (`EnableEnemyScan`, `EnableValuableScan`, `EnableCosmeticScan`, `EnableItemScan`, `EnablePlayerScan`, `EnableExtractionScan`, `ShowInactiveExtractions`). All are enabled (`true`) by default.
+* **Custom Category Colors:** Every entity type now has its own configurable holographic color in the `[Style]` section (`ScanColorEnemy`, `ScanColorValuable`, `ScanColorCosmetic`, `ScanColorItem`, `ScanColorPlayer`, `ScanColorExtraction`, `ScanColorExtractionInactive`).
+* **Bilingual Configuration:** The entire BepInEx `.cfg` file now provides full bilingual descriptions in English and Spanish (`[EN] ... / [ES] ...`).
+* **Real-Time Config Reloading:** Configuration changes made in `com.mod.repoterrainscanner.cfg` are reloaded on each scan press, allowing settings to update on the fly without restarting the game.
+
+#### Fixed
+* **Accurate Local Player Identification:** Fixed an issue where the local player was identified using mismatched transform roots; now utilizes native `SemiFunc.PlayerAvatarLocal()`, `PlayerAvatar.instance`, and `PhotonView.IsMine` for reliable self-scan toggling.
+
+---
+
 ### [3.0.5] - 2026-11-07
 
 #### Added
@@ -74,6 +90,22 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 ---
 
 ## Español
+
+### [3.1.0] - 2026-11-08
+
+#### Añadido
+* **Escaneo de Puntos de Extracción:** El escáner ahora detecta las terminales de extracción (`ExtractionPoint`) generadas por el mapa y proyecta recuadros holográficos tácticos a su alrededor.
+  * Los puntos activos/disponibles se muestran en **Cyan Eléctrico** (`#00F6FF`).
+  * Los puntos inactivos/completados (`isCompletedRightAway`) se muestran en **Gris Apagado** (`#808080`).
+* **Interruptores de Categorías Independientes:** Se agregaron opciones en el archivo de configuración para activar o desactivar individualmente el escaneo de cada tipo de entidad (`EnableEnemyScan`, `EnableValuableScan`, `EnableCosmeticScan`, `EnableItemScan`, `EnablePlayerScan`, `EnableExtractionScan`, `ShowInactiveExtractions`). Todos vienen activados (`true`) por defecto.
+* **Colores Holográficos Personalizables:** Cada categoría ahora cuenta con su propio ajuste de color en la sección `[Style]` (`ScanColorEnemy`, `ScanColorValuable`, `ScanColorCosmetic`, `ScanColorItem`, `ScanColorPlayer`, `ScanColorExtraction`, `ScanColorExtractionInactive`).
+* **Configuración Bilingüe:** Todo el archivo de configuración `.cfg` ahora incluye descripciones claras tanto en inglés como en español (`[EN] ... / [ES] ...`).
+* **Recarga de Configuración en Tiempo Real:** Las modificaciones en `com.mod.repoterrainscanner.cfg` se recargan al presionar el escáner, aplicando cambios al vuelo sin reiniciar la partida.
+
+#### Corregido
+* **Identificación Precisa del Jugador Local:** Se solucionó el problema por el cual el jugador local no era reconocido debido a raíces de transform separadas; ahora utiliza las funciones nativas `SemiFunc.PlayerAvatarLocal()`, `PlayerAvatar.instance` y `PhotonView.IsMine` para un control fiable del auto-escaneo.
+
+---
 
 ### [3.0.5] - 2026-11-07
 
