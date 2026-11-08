@@ -9,7 +9,10 @@ Totalmente sincronizado en multijugador y optimizado para ofrecer un rendimiento
 ## Características Principales
 
 * **Detección Dinámica por Onda:** La onda visual viaja desde la posición del jugador. Los objetivos no se marcan de golpe: se revelan progresivamente cuando el pulso expansivo los alcanza físicamente.
-* **Integración con la UI Nativa:** Sustituye los marcadores toscos por los cuadros de descubrimiento tácticos del propio motor del juego (`ValuableDiscover`), que ahora encuadran y siguen a los jugadores en tiempo real.
+* **Integración con la UI Nativa:** Sustituye los marcadores toscos por los cuadros de descubrimiento tácticos del propio motor del juego (`ValuableDiscover`), que ahora encuadran y siguen a los jugadores y estaciones en tiempo real.
+* **Audio Táctico Inmersivo:** Efecto de sonido sonar personalizado que se escucha en 2D directo para quien escanea y en audio espacial 3D posicional a través de las instalaciones para tus aliados.
+* **Puntos de Extracción Inteligentes:** Localiza terminales de extracción (`ExtractionPoint`) distinguiendo entre puntos disponibles y terminales ya utilizadas o inactivas.
+* **Sistema Anti-Spam (Cooldown):** Tiempo de reutilización configurable para evitar la saturación visual, acústica y de eventos de red.
 * **Rendimiento Cero-Lag:** Utiliza consultas de física en radio local (`Physics.OverlapSphere`) combinadas con procesamiento distribuido por fotogramas (*time-slicing*). Despídete de los tirones o bajadas de FPS al activar la tecla.
 * **Filtro Inteligente de Entornos y Carrito:** Reconoce la estructura interna del mapa para evitar marcar puertas o elementos estáticos, e ignora automáticamente los objetos ya depositados en el carrito de extracción.
 
@@ -26,6 +29,8 @@ Los objetos detectados se clasifican y resaltan con un código visual intuitivo:
 | 🟡 **Amarillo** | **Valuables / Botín** | Chatarra y objetos de valor listos para ser transportados y vendidos (`ValuableObject`). |
 | 🔵 **Azul** | **Cosméticos** | Cajas y artículos cosméticos especiales encontrados en la expedición. |
 | 🟣 **Morado** | **Herramientas / Armas** | Ítems de supervivencia, armamento y drones caídos en el mapa (`ItemAttributes`). |
+| 🩵 **Cyan Eléctrico** | **Extracción Activa** | Terminales y puntos de extracción listos o en espera para evacuar botín. |
+| 🔘 **Gris** | **Extracción Inactiva** | Puntos de extracción ya completados o fuera de servicio (`isCompletedRightAway`). |
 
 ---
 
