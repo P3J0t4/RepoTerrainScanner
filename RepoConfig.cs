@@ -7,6 +7,7 @@ namespace RepoTerrainScanner
     public class RepoConfig
     {
         public ConfigEntry<Key> ActiveKey;
+        public ConfigEntry<bool> EnableSelfScan;
         public ConfigEntry<Color> ScanColorHead, ScanColor;
         public ConfigEntry<float> ScanLineWidth, ScanLineInterval, HeadScanLineWidth;
         public ConfigEntry<float> ScanRange, ScanMaxDistance, ScanDuration;
@@ -14,6 +15,7 @@ namespace RepoTerrainScanner
         public RepoConfig(ConfigFile cfg)
         {
             ActiveKey = cfg.Bind("General", "ActiveKey", Key.C, "Tecla para activar");
+            EnableSelfScan = cfg.Bind("Experimental", "EnableSelfScan", true, "Permite que el escaner te detecte a ti mismo (utilidad temporal de prueba para mods de 3ra persona, se removera en futuras versiones).");
             ScanColorHead = cfg.Bind("Style", "ScanColorHead", new Color(1f, 0.83f, 0.41f, 1f));
             ScanColor = cfg.Bind("Style", "ScanColor", new Color(0.38f, 0.73f, 0.87f, 1f));
             ScanLineWidth = cfg.Bind("Style", "ScanLineWidth", 1.0f);

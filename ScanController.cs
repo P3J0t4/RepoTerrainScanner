@@ -16,6 +16,32 @@ namespace RepoTerrainScanner
         public Coroutine Routine;
     }
 
+    /// <summary>
+    /// Componente auxiliar anclado al jugador que mantiene sincronizada la posición
+    /// del proxy y sus límites para que el recuadro holográfico nativo lo siga en tiempo real.
+    /// </summary>
+    public class ScannerPlayerProxy : MonoBehaviour
+    {
+        public PhysGrabObject pgo;
+        public Material invMat;
+
+        private void LateUpdate()
+        {
+            if (pgo != null)
+            {
+                pgo.centerPoint = transform.position;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (invMat != null)
+            {
+                Destroy(invMat);
+            }
+        }
+    }
+
     public class ScanController : MonoBehaviour, IOnEventCallback
     {
         public const byte SCAN_EVENT_CODE = 173;
@@ -150,23 +176,7 @@ namespace RepoTerrainScanner
             public float distance;
             public Color color;
             public Vector3 position;
-        }
-
-        private static bool ContainsBadWord(string name)
-        {
-            if (string.IsNullOrEmpty(name)) return false;
-            return name.Contains("door") || name.Contains("cabinet") || 
-                   name.Contains("drawer") || name.Contains("hinge") || 
-                   name.Contains("locker") || name.Contains("closet") ||
-                   name.Contains("toilet") || name.Contains("lid") ||
-                   name.Contains("vent") || name.Contains("rack") ||
-                   name.Contains("chair") || name.Contains("table") ||
-                   name.Contains("desk") || name.Contains("trash") ||
-                   name.Contains("bin") || name.Contains("shelf") ||
-                   name.Contains("glass") || name.Contains("window") ||
-                   name.Contains("lamp") || name.Contains("light") ||
-                   name.Contains("cart") || name.Contains("vehicle") ||
-                   name.Contains("barrel") || name.Contains("box");
+            public PlayerAvatar playerAvatar;
         }
 
         private IEnumerator AnimateWaveAndDiscover(int playerId, ActiveWave wave, Vector3 origin, ScanSettingsData cfg)
@@ -195,6 +205,12 @@ namespace RepoTerrainScanner
                     Collider col = colliders[i];
                     if (col == null || !col.gameObject.activeInHierarchy) continue;
 
+                    // Los jugadores se detectan y gestionan en Fase 1.5 con seguimiento dinámico
+                    if (col.GetComponentInParent<PlayerAvatar>() != null || col.GetComponentInParent<PlayerController>() != null)
+                    {
+                        continue;
+                    }
+
                     PhysGrabObject pgo = col.GetComponentInParent<PhysGrabObject>();
                     if (pgo == null) continue;
 
@@ -217,11 +233,6 @@ namespace RepoTerrainScanner
                     {
                         targetColor = Color.red;
                     } 
-                    else if (pgo.GetComponentInParent<PlayerAvatar>() != null || pgo.GetComponentInParent<PlayerController>() != null) 
-                    {
-                        if (pgo.transform.root != this.transform.root) 
-                            targetColor = Color.green;
-                    } 
                     else if (pgo.GetComponentInParent<ValuableObject>() != null) 
                     {
                         targetColor = Color.yellow;
@@ -237,7 +248,13 @@ namespace RepoTerrainScanner
                     
                     if (targetColor != Color.clear)
                     {
-                        pendingTargets.Add(new ScanTarget { physGrab = pgo, distance = dist, color = targetColor, position = pgo.transform.position });
+                        pendingTargets.Add(new ScanTarget { 
+                            physGrab = pgo, 
+                            distance = dist, 
+                            color = targetColor, 
+                            position = pgo.transform.position,
+                            playerAvatar = null
+                        });
                     }
 
                     processCount++;
@@ -249,22 +266,32 @@ namespace RepoTerrainScanner
                 }
 
                 // ====================================================================
-                // FASE 1.5: JUGADORES VIVOS (Esferas Primitivas Verdes)
+                // FASE 1.5: JUGADORES (Cuadro Holográfico Verde de Alta Tecnología)
                 // ====================================================================
                 foreach (var avatar in FindObjectsOfType<PlayerAvatar>())
                 {
                     if (avatar == null || !avatar.gameObject.activeInHierarchy) continue;
 
-                    if (avatar.transform.root == this.transform.root) 
+                    bool isSelf = (avatar.transform.root == this.transform.root);
+                    bool allowSelfScan = RepoScannerPlugin.ConfigInstance == null || RepoScannerPlugin.ConfigInstance.EnableSelfScan.Value;
+
+                    if (isSelf && !allowSelfScan)
                         continue;
 
                     float dist = Vector3.Distance(origin, avatar.transform.position);
                     if (dist <= maxDistance)
                     {
-                        pendingTargets.Add(new ScanTarget { physGrab = null, distance = dist, color = Color.green, position = avatar.transform.position });
+                        pendingTargets.Add(new ScanTarget { 
+                            physGrab = null, 
+                            distance = dist, 
+                            color = Color.green, 
+                            position = avatar.transform.position,
+                            playerAvatar = avatar
+                        });
                     }
                 }
             } // <-- FIN DEL IF (isLocalScan)
+
             // ====================================================================
             // FASE 2: ANIMACIÓN DE ONDA VISUAL (Cero basura gráfica)
             // ====================================================================
@@ -292,15 +319,33 @@ namespace RepoTerrainScanner
 
                 for (int i = pendingTargets.Count - 1; i >= 0; i--)
                 {
-                    if (currentRadius >= pendingTargets[i].distance)
+                    var target = pendingTargets[i];
+                    
+                    // Seguimiento dinámico en tiempo real para jugadores en movimiento
+                    float targetDist = target.distance;
+                    if (target.playerAvatar != null)
                     {
-                        if (pendingTargets[i].physGrab != null)
+                        if (!target.playerAvatar.gameObject.activeInHierarchy)
                         {
-                            TriggerNativeUIBox(pendingTargets[i].color, pendingTargets[i].physGrab, cfg.ScanDuration);
+                            pendingTargets.RemoveAt(i);
+                            continue;
+                        }
+                        targetDist = Vector3.Distance(origin, target.playerAvatar.transform.position);
+                    }
+
+                    if (currentRadius >= targetDist)
+                    {
+                        if (target.playerAvatar != null)
+                        {
+                            TriggerPlayerUIBox(target.playerAvatar, target.color, cfg.ScanDuration);
+                        }
+                        else if (target.physGrab != null)
+                        {
+                            TriggerNativeUIBox(target.color, target.physGrab, cfg.ScanDuration);
                         }
                         else
                         {
-                            SpawnMarker(pendingTargets[i].position, pendingTargets[i].color);
+                            SpawnMarker(target.position, target.color);
                         }
 
                         pendingTargets.RemoveAt(i);
@@ -320,6 +365,97 @@ namespace RepoTerrainScanner
             
             _activeWaves.Remove(playerId);
             Destroy(mat); 
+        }
+
+        private void TriggerPlayerUIBox(PlayerAvatar avatar, Color markerColor, float waveDuration)
+        {
+            if (avatar == null || !avatar.gameObject.activeInHierarchy) return;
+
+            if (ValuableDiscover.instance != null)
+            {
+                try
+                {
+                    // Buscar o crear el proxy exclusivo que sigue al jugador y le da dimensiones reales
+                    ScannerPlayerProxy proxy = avatar.GetComponentInChildren<ScannerPlayerProxy>();
+                    if (proxy == null)
+                    {
+                        GameObject proxyObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        proxyObj.name = "ScannerPlayerProxy";
+                        
+                        // Eliminar inmediatamente el collider para cero interferencia física
+                        Collider col = proxyObj.GetComponent<Collider>();
+                        if (col != null) Destroy(col);
+
+                        // Anclar como hijo del avatar a la altura del torso
+                        proxyObj.transform.SetParent(avatar.transform, false);
+                        proxyObj.transform.localPosition = new Vector3(0f, 1.0f, 0f);
+                        proxyObj.transform.localScale = new Vector3(0.85f, 1.8f, 0.85f);
+
+                        // Renderizador completamente transparente para que ValuableDiscoverGraphic calcule los límites
+                        Renderer rend = proxyObj.GetComponent<Renderer>();
+                        Material invMat = new Material(Shader.Find("GUI/Text Shader"));
+                        invMat.color = Color.clear;
+                        rend.material = invMat;
+                        rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                        rend.receiveShadows = false;
+
+                        PhysGrabObject pgo;
+                        try
+                        {
+                            ScanControllerPatches.shouldSuppressPhysGrabObjectAwake = true;
+                            pgo = proxyObj.AddComponent<PhysGrabObject>();
+                            pgo.enabled = false;
+                            pgo.centerPoint = proxyObj.transform.position;
+                        }
+                        finally
+                        {
+                            ScanControllerPatches.shouldSuppressPhysGrabObjectAwake = false;
+                        }
+
+                        proxy = proxyObj.AddComponent<ScannerPlayerProxy>();
+                        proxy.pgo = pgo;
+                        proxy.invMat = invMat;
+                    }
+
+                    if (proxy != null && proxy.pgo != null)
+                    {
+                        // Sincronizar inmediatamente la posición en el mundo
+                        proxy.pgo.centerPoint = proxy.transform.position;
+
+                        ValuableDiscoverCustom custom = proxy.GetComponent<ValuableDiscoverCustom>();
+                        if (custom == null)
+                        {
+                            GameObject go = new GameObject("ScannerPlayerCustomDiscover");
+                            go.transform.SetParent(proxy.transform);
+                            go.transform.localPosition = Vector3.zero;
+
+                            try
+                            {
+                                ScanControllerPatches.shouldSuppressValuableDiscoverCustomAwake = true;
+                                custom = go.AddComponent<ValuableDiscoverCustom>();
+                            }
+                            finally
+                            {
+                                ScanControllerPatches.shouldSuppressValuableDiscoverCustomAwake = false;
+                            }
+                        }
+
+                        if (custom != null)
+                        {
+                            custom.colorCorner = markerColor;
+                            custom.colorMiddle = new Color(markerColor.r * 0.4f, markerColor.g * 0.4f, markerColor.b * 0.4f, 0.3f);
+                            custom.waitTime = Mathf.Max(3.0f, waveDuration);
+
+                            ValuableDiscover.instance.New(proxy.pgo, ValuableDiscoverGraphic.State.Custom, custom);
+                            return;
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            // Respaldo de seguridad si ValuableDiscover no estuviera listo
+            SpawnMarker(avatar.transform.position, markerColor);
         }
 
         private void TriggerNativeUIBox(Color markerColor, PhysGrabObject physGrab, float waveDuration)
@@ -376,15 +512,24 @@ namespace RepoTerrainScanner
         }
     }
 
-    [HarmonyPatch(typeof(ValuableDiscoverCustom), "Awake")]
+    [HarmonyPatch]
     public static class ScanControllerPatches
     {
         public static bool shouldSuppressValuableDiscoverCustomAwake = false;
+        public static bool shouldSuppressPhysGrabObjectAwake = false;
 
+        [HarmonyPatch(typeof(ValuableDiscoverCustom), "Awake")]
         [HarmonyPrefix]
-        public static bool Prefix()
+        public static bool SuppressValuableDiscoverCustomAwake()
         {
             return !shouldSuppressValuableDiscoverCustomAwake;
+        }
+
+        [HarmonyPatch(typeof(PhysGrabObject), "Awake")]
+        [HarmonyPrefix]
+        public static bool SuppressPhysGrabObjectAwake()
+        {
+            return !shouldSuppressPhysGrabObjectAwake;
         }
     }
 }

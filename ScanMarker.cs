@@ -32,5 +32,10 @@ namespace RepoTerrainScanner
             mat.color = c;
             transform.localScale = Vector3.Lerp(Vector3.one * 0.45f, Vector3.zero, t);
         }
+
+        private void OnDestroy()
+        {
+            if (mat != null) Destroy(mat);
+        }
     }
 }

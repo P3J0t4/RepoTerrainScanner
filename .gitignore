@@ -1,0 +1,18 @@
+# Compilación y binarios generados
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+
+# Carpetas temporales y paquetes zip de Thunderstore
+package/
+backup_stable/
+dotnet build -c Release.txt
+
+# DLL compilada de distribución
+REPO Terrain Scanner/RepoTerrainScanner.dll
+
+# IDEs
+.vs/
+.vscode/
+.idea/
