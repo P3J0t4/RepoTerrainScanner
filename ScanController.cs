@@ -48,6 +48,7 @@ namespace RepoTerrainScanner
         public Material scanMaterial;
 
         private ScanPostProcess _postProcess;
+        private AudioSource _audioSource;
         private bool _wasKeyPressed = false;
         private static Harmony _harmony;
         
@@ -68,6 +69,9 @@ namespace RepoTerrainScanner
         private void Start()
         {
             _postProcess = GetComponent<ScanPostProcess>();
+            _audioSource = gameObject.GetComponent<AudioSource>() ?? gameObject.AddComponent<AudioSource>();
+            _audioSource.spatialBlend = 0f;
+            _audioSource.playOnAwake = false;
         }
 
         private void Update()
@@ -148,6 +152,8 @@ namespace RepoTerrainScanner
         {
             if (scanMaterial == null) return;
             if (_postProcess == null) _postProcess = GetComponent<ScanPostProcess>();
+
+            PlayScanAudio(playerId, origin);
 
             ActiveWave wave;
             
@@ -479,6 +485,38 @@ namespace RepoTerrainScanner
             
             _activeWaves.Remove(playerId);
             Destroy(mat); 
+        }
+
+        private void PlayScanAudio(int playerId, Vector3 origin)
+        {
+            if (RepoScannerPlugin.ConfigInstance != null && !RepoScannerPlugin.ConfigInstance.EnableScanSound.Value)
+                return;
+
+            AudioClip clip = RepoScannerPlugin.Instance?.ScanAudioClip;
+            if (clip == null) return;
+
+            float volume = RepoScannerPlugin.ConfigInstance != null 
+                ? Mathf.Clamp01(RepoScannerPlugin.ConfigInstance.ScanSoundVolume.Value) 
+                : 0.8f;
+
+            int myPlayerId = PhotonNetwork.InRoom ? PhotonNetwork.LocalPlayer.ActorNumber : 0;
+            if (playerId == myPlayerId)
+            {
+                // Sonido 2D directo y claro para el jugador local
+                if (_audioSource != null)
+                {
+                    _audioSource.PlayOneShot(clip, volume);
+                }
+                else
+                {
+                    AudioSource.PlayClipAtPoint(clip, origin, volume);
+                }
+            }
+            else
+            {
+                // Sonido 3D espacial para aliados en red
+                AudioSource.PlayClipAtPoint(clip, origin, volume);
+            }
         }
 
         private static readonly System.Reflection.FieldInfo _isCompletedRightAwayField = 

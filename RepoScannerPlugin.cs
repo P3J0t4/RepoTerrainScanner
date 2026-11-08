@@ -15,6 +15,7 @@ namespace RepoTerrainScanner
         internal static ManualLogSource ModLogger;
 
         public Material ScanMat { get; private set; }
+        public AudioClip ScanAudioClip { get; private set; }
 
         private void Awake()
         {
@@ -23,24 +24,55 @@ namespace RepoTerrainScanner
             ModLogger.LogInfo("=== [RepoTerrainScanner] Iniciando (Sistema Modular v3.1.0) ===");
 
             ConfigInstance = new RepoConfig(Config);
-            LoadBundle();
+            LoadBundles();
 
             SceneManager.sceneLoaded += (scene, mode) => EnsureCameraHook();
         }
 
-        private void LoadBundle()
+        private void LoadBundles()
         {
-            string bundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "scanwave.bundle");
-            if (!File.Exists(bundlePath))
+            string pluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
+            // 1. Cargar scanwave.bundle (Material / Shader)
+            string wavePath = Path.Combine(pluginDir, "scanwave.bundle");
+            if (File.Exists(wavePath))
             {
-                ModLogger.LogError($"[RepoTerrainScanner] No se encontro scanwave.bundle en: {bundlePath}");
-                return;
+                AssetBundle waveBundle = AssetBundle.LoadFromFile(wavePath);
+                if (waveBundle != null && waveBundle.LoadAllAssets<Material>().Length > 0)
+                {
+                    ScanMat = waveBundle.LoadAllAssets<Material>()[0];
+                    ModLogger.LogInfo("[RepoTerrainScanner] scanwave.bundle cargado con exito.");
+                }
+            }
+            else
+            {
+                ModLogger.LogError($"[RepoTerrainScanner] No se encontro scanwave.bundle en: {wavePath}");
             }
 
-            AssetBundle bundle = AssetBundle.LoadFromFile(bundlePath);
-            if (bundle != null && bundle.LoadAllAssets<Material>().Length > 0)
+            // 2. Cargar scansound.bundle (AudioClip darkSonar)
+            string soundPath = Path.Combine(pluginDir, "scansound.bundle");
+            if (File.Exists(soundPath))
             {
-                ScanMat = bundle.LoadAllAssets<Material>()[0];
+                AssetBundle soundBundle = AssetBundle.LoadFromFile(soundPath);
+                if (soundBundle != null)
+                {
+                    AudioClip clip = soundBundle.LoadAsset<AudioClip>("darkSonar");
+                    if (clip == null)
+                    {
+                        var allClips = soundBundle.LoadAllAssets<AudioClip>();
+                        if (allClips.Length > 0) clip = allClips[0];
+                    }
+
+                    if (clip != null)
+                    {
+                        ScanAudioClip = clip;
+                        ModLogger.LogInfo($"[RepoTerrainScanner] Sonido del escaner ({clip.name}) cargado con exito.");
+                    }
+                }
+            }
+            else
+            {
+                ModLogger.LogWarning($"[RepoTerrainScanner] No se encontro scansound.bundle en: {soundPath}");
             }
         }
 

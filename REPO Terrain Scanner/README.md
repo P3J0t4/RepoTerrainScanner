@@ -52,6 +52,8 @@ Puedes modificar los parámetros directamente o mediante un gestor de configurac
 | `EnablePlayerScan` | `true` | Escanea y resalta compañeros de equipo y jugadores (Verde). |
 | `EnableExtractionScan` | `true` | Escanea y resalta puntos de extracción en el mapa (Cyan). |
 | `ShowInactiveExtractions` | `true` | Muestra puntos de extracción inactivos o ya completados (Gris). Si es `false`, solo se muestran los activos. |
+| `EnableScanSound` | `true` | Activa o desactiva la reproducción del efecto de sonido sonar al escanear. |
+| `ScanSoundVolume` | `0.8` | Volumen del efecto de sonido del escáner (de 0.0 a 1.0). |
 | `EnableSelfScan` | `true` | *(Experimental / Prueba)* Permite que el escáner te detecte a ti mismo para probar con mods de 3ra persona (se removerá en futuras versiones). |
 | `ScanColorEnemy` | `#FF0000` | Color del recuadro holográfico para enemigos. |
 | `ScanColorValuable` | `#FFFF00` | Color del recuadro holográfico para chatarra y valiosos. |
@@ -80,7 +82,7 @@ Puedes modificar los parámetros directamente o mediante un gestor de configurac
 ### Manual
 1. Asegúrate de tener instalado **BepInEx 5.4.21** o superior.
 2. Descarga el `.zip` de la última versión del mod.
-3. Extrae el contenido y coloca los archivos `RepoTerrainScanner.dll` y `scanwave.bundle` dentro de tu carpeta `REPO/BepInEx/plugins/`.
+3. Extrae el contenido y coloca los archivos `RepoTerrainScanner.dll`, `scanwave.bundle` y `scansound.bundle` dentro de tu carpeta `REPO/BepInEx/plugins/`.
 4. Inicia el juego.
 
 ---

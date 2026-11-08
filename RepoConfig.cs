@@ -15,11 +15,13 @@ namespace RepoTerrainScanner
         public ConfigEntry<bool> EnablePlayerScan;
         public ConfigEntry<bool> EnableExtractionScan;
         public ConfigEntry<bool> ShowInactiveExtractions;
+        public ConfigEntry<bool> EnableScanSound;
 
         // Opciones experimentales
         public ConfigEntry<bool> EnableSelfScan;
 
-        // Colores de resaltado de entidades (Style)
+        // Colores y sonido (Style)
+        public ConfigEntry<float> ScanSoundVolume;
         public ConfigEntry<Color> ScanColorEnemy;
         public ConfigEntry<Color> ScanColorValuable;
         public ConfigEntry<Color> ScanColorCosmetic;
@@ -62,6 +64,9 @@ namespace RepoTerrainScanner
             ShowInactiveExtractions = cfg.Bind("General", "ShowInactiveExtractions", true, 
                 "[EN] Show inactive or already completed extraction points. If false, only active points appear. / [ES] Muestra puntos de extraccion inactivos o completados. Si es false, solo se muestran los activos.");
 
+            EnableScanSound = cfg.Bind("General", "EnableScanSound", true, 
+                "[EN] Play sonar sound effect when scanning. / [ES] Reproduce el efecto de sonido sonar al escanear.");
+
             // ==========================================
             // SECCIÓN: Experimental
             // ==========================================
@@ -69,8 +74,11 @@ namespace RepoTerrainScanner
                 "[EN] Allow the scanner to detect yourself (temporary testing option for 3rd person mods, will be removed in future updates). / [ES] Permite que el escaner te detecte a ti mismo (utilidad temporal de prueba para mods de 3ra persona, se removera en futuras versiones).");
 
             // ==========================================
-            // SECCIÓN: Style (Colores y Onda Expansiva)
+            // SECCIÓN: Style (Colores, Audio y Onda Expansiva)
             // ==========================================
+            ScanSoundVolume = cfg.Bind("Style", "ScanSoundVolume", 0.8f, 
+                "[EN] Volume of the scan sound effect (0.0 to 1.0). / [ES] Volumen del efecto de sonido del escaner (0.0 a 1.0).");
+
             ScanColorEnemy = cfg.Bind("Style", "ScanColorEnemy", Color.red, 
                 "[EN] Holographic color for enemies. / [ES] Color holografico para enemigos.");
 

@@ -13,6 +13,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 ### [3.1.0] - 2026-11-08
 
 #### Added
+* **Tactical Sonar Audio:** Integrated custom sonar sound effect (`scansound.bundle` / `darkSonar.wav`). Plays crisp, centered 2D audio for the local player and 3D positional audio across the facility for remote teammates in multiplayer. Includes volume and toggle controls in the configuration.
 * **Extraction Point Scanning:** The scanner now detects extraction terminals (`ExtractionPoint`) generated across the facility and projects tactical holographic frames around them.
   * Active/Ready extraction points are displayed in **Electric Cyan** (`#00F6FF`).
   * Inactive/Completed extraction points (`isCompletedRightAway`) are displayed in **Dim Gray** (`#808080`).
@@ -94,6 +95,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 ### [3.1.0] - 2026-11-08
 
 #### Añadido
+* **Efecto de Sonido Sonar Táctico:** Se integró un sonido de sonar personalizado (`scansound.bundle` / `darkSonar.wav`). Se reproduce en audio 2D directo y claro para el jugador local y en audio 3D posicional para los compañeros en multijugador. Incluye control de volumen e interruptor en la configuración.
 * **Escaneo de Puntos de Extracción:** El escáner ahora detecta las terminales de extracción (`ExtractionPoint`) generadas por el mapa y proyecta recuadros holográficos tácticos a su alrededor.
   * Los puntos activos/disponibles se muestran en **Cyan Eléctrico** (`#00F6FF`).
   * Los puntos inactivos/completados (`isCompletedRightAway`) se muestran en **Gris Apagado** (`#808080`).
