@@ -50,6 +50,7 @@ namespace RepoTerrainScanner
         private ScanPostProcess _postProcess;
         private AudioSource _audioSource;
         private bool _wasKeyPressed = false;
+        private float _lastScanTime = -999f;
         private static Harmony _harmony;
         
         private Dictionary<int, ActiveWave> _activeWaves = new Dictionary<int, ActiveWave>();
@@ -89,13 +90,22 @@ namespace RepoTerrainScanner
                 {
                     RepoScannerPlugin.Instance.Config.Reload();
                     
-                    Vector3 origin = transform.position;
-                    ScanSettingsData localSettings = ScanSettingsData.FromLocalConfig();
-                    
-                    int localPlayerId = PhotonNetwork.InRoom ? PhotonNetwork.LocalPlayer.ActorNumber : 0;
-                    
-                    TriggerScan(localPlayerId, origin, localSettings);
-                    BroadcastScan(origin, localSettings);
+                    float cooldown = RepoScannerPlugin.ConfigInstance != null 
+                        ? Mathf.Max(0f, RepoScannerPlugin.ConfigInstance.ScanCooldown.Value) 
+                        : 6.0f;
+
+                    if (Time.time - _lastScanTime >= cooldown)
+                    {
+                        _lastScanTime = Time.time;
+
+                        Vector3 origin = transform.position;
+                        ScanSettingsData localSettings = ScanSettingsData.FromLocalConfig();
+                        
+                        int localPlayerId = PhotonNetwork.InRoom ? PhotonNetwork.LocalPlayer.ActorNumber : 0;
+                        
+                        TriggerScan(localPlayerId, origin, localSettings);
+                        BroadcastScan(origin, localSettings);
+                    }
                 }
                 _wasKeyPressed = isDown;
             }
@@ -514,8 +524,15 @@ namespace RepoTerrainScanner
             }
             else
             {
-                // Sonido 3D espacial para aliados en red
-                AudioSource.PlayClipAtPoint(clip, origin, volume);
+                // Sonido 3D espacial para aliados en red (por defecto desactivado)
+                bool hearOthers = RepoScannerPlugin.ConfigInstance != null && 
+                                  RepoScannerPlugin.ConfigInstance.EnableRemotePlayerSound != null && 
+                                  RepoScannerPlugin.ConfigInstance.EnableRemotePlayerSound.Value;
+
+                if (hearOthers)
+                {
+                    AudioSource.PlayClipAtPoint(clip, origin, volume);
+                }
             }
         }
 

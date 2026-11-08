@@ -8,6 +8,7 @@ namespace RepoTerrainScanner
     {
         // Controles y opciones de activación (General)
         public ConfigEntry<Key> ActiveKey;
+        public ConfigEntry<float> ScanCooldown;
         public ConfigEntry<bool> EnableEnemyScan;
         public ConfigEntry<bool> EnableValuableScan;
         public ConfigEntry<bool> EnableCosmeticScan;
@@ -16,6 +17,7 @@ namespace RepoTerrainScanner
         public ConfigEntry<bool> EnableExtractionScan;
         public ConfigEntry<bool> ShowInactiveExtractions;
         public ConfigEntry<bool> EnableScanSound;
+        public ConfigEntry<bool> EnableRemotePlayerSound;
 
         // Opciones experimentales
         public ConfigEntry<bool> EnableSelfScan;
@@ -43,6 +45,9 @@ namespace RepoTerrainScanner
             ActiveKey = cfg.Bind("General", "ActiveKey", Key.C, 
                 "[EN] Key to activate the scanner. / [ES] Tecla para activar el escaner.");
 
+            ScanCooldown = cfg.Bind("General", "ScanCooldown", 6.0f, 
+                "[EN] Cooldown time in seconds between scanner activations to prevent spam. / [ES] Tiempo de enfriamiento (cooldown) en segundos entre activaciones del escaner para evitar spam.");
+
             EnableEnemyScan = cfg.Bind("General", "EnableEnemyScan", true, 
                 "[EN] Scan and highlight enemies in Red. / [ES] Escanea y resalta enemigos en Rojo.");
 
@@ -66,6 +71,9 @@ namespace RepoTerrainScanner
 
             EnableScanSound = cfg.Bind("General", "EnableScanSound", true, 
                 "[EN] Play sonar sound effect when scanning. / [ES] Reproduce el efecto de sonido sonar al escanear.");
+
+            EnableRemotePlayerSound = cfg.Bind("General", "EnableRemotePlayerSound", false, 
+                "[EN] Hear the sonar sound when other players scan in multiplayer. / [ES] Escuchar el sonido del sonar cuando otros jugadores escanean en multijugador.");
 
             // ==========================================
             // SECCIÓN: Experimental
